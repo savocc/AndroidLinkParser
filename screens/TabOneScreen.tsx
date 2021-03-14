@@ -1,32 +1,88 @@
-import * as React from 'react';
-import { StyleSheet } from 'react-native';
+import React, { useState, useEffect } from "react";
+import { FlatList, SafeAreaView, StatusBar, StyleSheet,
+  Text, TouchableOpacity, View, ActivityIndicator, Image } from "react-native";
 
-import EditScreenInfo from '../components/EditScreenInfo';
-import { Text, View } from '../components/Themed';
+const DATA = [
+  {
+    id:"1",
+    title:"First item",
+  },
+  {
+    id:"2",
+    title:"Another item",
+  },
+  {
+    id:"3",
+    title:"Next item",
+  },
 
-export default function TabOneScreen() {
+];
+
+const Item = ({ item, onPress, style }) => (
+  <TouchableOpacity style={[styles.item, style]} onPress={onPress}>
+    <Image source={{uri:item.url}} style={{height:50, width:50}} />
+    <Text style={styles.title}>{item.title}</Text>
+  </TouchableOpacity>
+);
+
+const App: () => React$Node = () => {
+
+  const [selectedId, setSelectedId] = useState(null);
+  const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(()=>{
+    fetch('https://jsonplaceholder.typicode.com/posts')
+    .then((response)=>response.json())
+    .then((json)=>setData(json))
+    .catch((error)=>console.error(error))
+    .finally(setIsLoading(false));
+    },[]);
+
+  const renderItem = ({item}) => {
+    const backgroundColor = item.id===selectedId ? '#6e6e6e' : '#c0c0f0';
+    return (<Item item={item}
+      onPress={()=>{setSelectedId(item.id); alert(item.title);}}
+      style={{backgroundColor}}
+    />);
+  }
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="/screens/TabOneScreen.js" />
-    </View>
+    <>
+      {isLoading ? <ActivityIndicator
+        style={{marginVertical:20}} size="large" color="0000ff"/>:
+        (<SafeAreaView style={styles.container}>
+            <FlatList
+              data={data}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.id}
+              extraData={selectedId}
+              />
+        </SafeAreaView>
+        )
+      }
+    </>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
+  container:{
+    flex:1,
+    margin:0
+    },
+  item:{
+    flex:1,
+    flexDirection:'row',
+    backgroundColor:'#c0c0f0',
+    padding: 20,
+    marginVertical:8,
+    marginHorizontal:16
+  },
+  title:{
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
+    flexWrap: 'wrap',
+      fontSize:14
+  }
 });
+
+export default App;
